@@ -1,0 +1,1144 @@
+﻿<Window x:Class="CasinoRobot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:Converters="clr-namespace:CasinoRobot.Converters"
+        xmlns:ViewModels="clr-namespace:CasinoRobot.ViewModels"
+        xmlns:Views="clr-namespace:CasinoRobot.Views"
+        xmlns:WpfToolkit="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        Title="MainWindow"
+        Width="1000"
+        Height="800"
+        MinWidth="500"
+        MinHeight="350"
+        AllowsTransparency="True"
+        Background="White"
+        WindowStyle="None">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views/Brushes.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Margin" Value="2" />
+                <Setter Property="Focusable" Value="False" />
+            </Style>
+            <Style TargetType="{x:Type ToggleButton}">
+                <Setter Property="Margin" Value="2" />
+            </Style>
+            <Style TargetType="{x:Type TextBox}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="2" />
+            </Style>
+            <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="2" />
+            </Style>
+            <Style TargetType="{x:Type Grid}">
+                <Setter Property="Margin" Value="2" />
+            </Style>
+
+            <CompositeCollection x:Key="MarkerCompositeSource">
+                <CollectionContainer Collection="{Binding Settings.CasinoButtons, Source={x:Static ViewModels:ApplicationViewModel.Instance}}" />
+                <CollectionContainer Collection="{Binding Settings.CasinoBets, Source={x:Static ViewModels:ApplicationViewModel.Instance}}" />
+                <CollectionContainer Collection="{Binding Settings.CasinoNumbers, Source={x:Static ViewModels:ApplicationViewModel.Instance}}" />
+            </CompositeCollection>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border BorderBrush="Gray"
+            BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="*"
+                                  MinWidth="340" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Casino Area  -->
+            <Border Grid.Row="0"
+                    BorderBrush="Black"
+                    BorderThickness="2">
+                <Grid>
+                    <!--  Casino Canvas  -->
+                    <ItemsControl x:Name="CasinoCanvas"
+                                  Background="Transparent"
+                                  MouseDown="MoveWindow_MouseDown">
+                        <ItemsControl.RenderTransform>
+                            <MatrixTransform />
+                        </ItemsControl.RenderTransform>
+                        <ItemsControl.Style>
+                            <Style TargetType="{x:Type ItemsControl}">
+                                <Setter Property="ItemsSource" Value="{Binding Statistics.LastNumberAsCollection}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowMarkers}"
+                                                 Value="True">
+                                        <Setter Property="ItemsSource" Value="{StaticResource MarkerCompositeSource}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="{x:Type ContentPresenter}">
+                                <Setter Property="Visibility" Value="{Binding HasValue, Converter={x:Static Converters:BoolToVisibilityConverter.Instance}}" />
+                                <Style.Triggers>
+                                    <!--  Casino Button Template  -->
+                                    <DataTrigger Binding="{Binding Converter={x:Static Converters:IsOfTypeConverter.Instance},
+                                                                   ConverterParameter={x:Type ViewModels:CasinoButtonViewModel}}"
+                                                 Value="True">
+                                        <Setter Property="Canvas.Left" Value="{Binding Position.X}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding Position.Y}" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <Ellipse Width="20"
+                                                             Height="20"
+                                                             Margin="-10,-10,0,0">
+                                                        <Ellipse.Style>
+                                                            <Style TargetType="{x:Type Ellipse}">
+                                                                <Setter Property="Fill" Value="{StaticResource DefaultMarkerBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{x:Static Converters:AreEqualConverter.Instance}">
+                                                                                <Binding Mode="OneWay"
+                                                                                         Path="SelectedButtonMarker"
+                                                                                         Source="{x:Static ViewModels:ApplicationViewModel.Instance}" />
+                                                                                <Binding Path="." />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+
+                                                                        <Setter Property="Fill" Value="{StaticResource SelectedButtonMarkerBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Ellipse.Style>
+                                                    </Ellipse>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <!--  Casino Bet Template  -->
+                                    <DataTrigger Binding="{Binding Converter={x:Static Converters:IsOfTypeConverter.Instance},
+                                                                   ConverterParameter={x:Type ViewModels:CasinoBetButtonViewModel}}"
+                                                 Value="True">
+                                        <Setter Property="Canvas.Left" Value="{Binding Position.X}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding Position.Y}" />
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <Ellipse Width="20"
+                                                             Height="20"
+                                                             Margin="-10,-10,0,0">
+                                                        <Ellipse.Style>
+                                                            <Style TargetType="{x:Type Ellipse}">
+                                                                <Setter Property="Fill" Value="{StaticResource DefaultMarkerBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{x:Static Converters:AreEqualConverter.Instance}">
+                                                                                <Binding Mode="OneWay"
+                                                                                         Path="SelectedBetMarker"
+                                                                                         Source="{x:Static ViewModels:ApplicationViewModel.Instance}" />
+                                                                                <Binding Path="." />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+
+                                                                        <Setter Property="Fill" Value="{StaticResource SelectedBetMarkerBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Ellipse.Style>
+                                                    </Ellipse>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <!--  Casino Number Template  -->
+                                    <DataTrigger Binding="{Binding Converter={x:Static Converters:IsOfTypeConverter.Instance},
+                                                                   ConverterParameter={x:Type ViewModels:CasinoNumberViewModel}}"
+                                                 Value="True">
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <Polygon Points="{Binding Area,
+                                                                              Converter={x:Static Converters:PointsToPointCollectionConverter.Instance}}"
+                                                             Stroke="OrangeRed"
+                                                             StrokeThickness="1">
+                                                        <Polygon.Style>
+                                                            <Style TargetType="{x:Type Polygon}">
+                                                                <Setter Property="Fill" Value="{StaticResource DefaultMarkerBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding Converter="{x:Static Converters:AreEqualConverter.Instance}">
+                                                                                <Binding Mode="OneWay"
+                                                                                         Path="SelectedNumberMarker"
+                                                                                         Source="{x:Static ViewModels:ApplicationViewModel.Instance}" />
+                                                                                <Binding Path="." />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+
+                                                                        <Setter Property="Fill" Value="{StaticResource SelectedNumberMarkerBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+
+                                                        </Polygon.Style>
+                                                    </Polygon>
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                    <!--  Casino Number Template When Running  -->
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Session.IsRunning, Source={x:Static ViewModels:ApplicationViewModel.Instance}}" Value="True" />
+                                            <Condition Binding="{Binding Converter={x:Static Converters:IsOfTypeConverter.Instance}, ConverterParameter={x:Type ViewModels:CasinoNumberViewModel}}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="ContentTemplate">
+                                            <Setter.Value>
+                                                <DataTemplate>
+                                                    <Polygon Fill="DarkGreen"
+                                                             Opacity="0.6"
+                                                             Points="{Binding Area,
+                                                                              Converter={x:Static Converters:PointsToPointCollectionConverter.Instance}}"
+                                                             Stroke="DarkKhaki"
+                                                             StrokeThickness="1" />
+                                                </DataTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+
+                    <!--  NumberKindBalances  -->
+                    <Grid DataContext="{Binding Source={x:Static ViewModels:ApplicationViewModel.Instance}}"
+                          Visibility="{Binding ShowNumberKindBalances,
+                                               Converter={x:Static Converters:BoolToVisibilityConverter.Instance}}">
+
+                        <Border BorderBrush="Black"
+                                BorderThickness="0,1,0,0" />
+
+                        <Canvas x:Name="cNumberKindBalances"
+                                Background="White" />
+
+                        <!--  NumberKindBalance Line Description  -->
+                        <Grid HorizontalAlignment="Left"
+                              VerticalAlignment="Top">
+                            <Grid.Resources>
+                                <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                                       TargetType="{x:Type ToggleButton}">
+                                    <Setter Property="Margin" Value="2,0" />
+                                    <Setter Property="Focusable" Value="False" />
+                                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                </Style>
+                            </Grid.Resources>
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="3" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="3" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ToggleButton Grid.Row="0"
+                                          Content="Red"
+                                          FontWeight="Bold"
+                                          Foreground="Red"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnRed}" />
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="1"
+                                       Text=" - " />
+                            <ToggleButton Grid.Row="0"
+                                          Grid.Column="2"
+                                          Content="Black"
+                                          FontWeight="Bold"
+                                          Foreground="Red"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnBlack}" />
+
+                            <ToggleButton Grid.Row="2"
+                                          Content="Even"
+                                          FontWeight="Bold"
+                                          Foreground="Black"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnEven}" />
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="1"
+                                       Text=" - " />
+                            <ToggleButton Grid.Row="2"
+                                          Grid.Column="2"
+                                          Content="Odd"
+                                          FontWeight="Bold"
+                                          Foreground="Black"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnOdd}" />
+
+                            <ToggleButton Grid.Row="4"
+                                          Content="To18"
+                                          FontWeight="Bold"
+                                          Foreground="Green"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnTo18}" />
+                            <TextBlock Grid.Row="4"
+                                       Grid.Column="1"
+                                       Text=" - " />
+                            <ToggleButton Grid.Row="4"
+                                          Grid.Column="2"
+                                          Content="From19"
+                                          FontWeight="Bold"
+                                          Foreground="Green"
+                                          IsChecked="{Binding Settings.TendencyBettingSettings.ManualBetOnFrom19}" />
+                        </Grid>
+
+                    </Grid>
+
+                    <!--  Statistics Lines  -->
+                    <Grid Margin="0"
+                          DataContext="{Binding Source={x:Static ViewModels:ApplicationViewModel.Instance}}"
+                          PreviewMouseDown="MoveWindow_MouseDown">
+                        <Grid.Visibility>
+                            <MultiBinding Converter="{x:Static Converters:AnyBoolToVisibilityConverter.Instance}">
+                                <Binding Path="ShowNumberRepetitionLines" />
+                                <Binding Path="ShowWinningsStatisticsLine" />
+                            </MultiBinding>
+                        </Grid.Visibility>
+
+                        <Border BorderBrush="Black" />
+
+                        <Canvas x:Name="cStatisticsLines"
+                                Background="White" />
+
+                        <StackPanel HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Orientation="Vertical">
+                            <TextBlock Foreground="Blue"
+                                       Text="{Binding Statistics.RepetingNumbersCount,
+                                                      StringFormat={}Repeting Numbers: {0}}" />
+                            <TextBlock Foreground="Red"
+                                       Text="{Binding Statistics.RepetingNumbersOffset1Count,
+                                                      StringFormat={}Repeting Numbers Offset1: {0}}" />
+                            <TextBlock Text="{Binding Session.SpinCount, StringFormat={}Spins To Next Drop: {0}, Converter={x:Static Converters:SpinsToDropConverter.Instance}}" />
+                        </StackPanel>
+
+                    </Grid>
+
+                    <!--  Canvas ToolBox  -->
+                    <Grid HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          Background="White">
+                        <Grid.Resources>
+                            <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                   TargetType="{x:Type Button}">
+                                <Setter Property="Margin" Value="2,0" />
+                                <Setter Property="Focusable" Value="False" />
+                            </Style>
+                            <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                                   TargetType="{x:Type ToggleButton}">
+                                <Setter Property="Margin" Value="2,0" />
+                                <Setter Property="Focusable" Value="False" />
+                            </Style>
+                            <Style TargetType="{x:Type Image}">
+                                <Setter Property="Width" Value="16" />
+                                <Setter Property="Height" Value="16" />
+                            </Style>
+                        </Grid.Resources>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton IsChecked="{Binding Settings.IsBettingEnabled}"
+                                          ToolTip="Enable/Disable Betting">
+                                <Image Source="pack://application:,,,/Images/BettingOn.png" />
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding ShowMarkers}"
+                                          ToolTip="Show Markers">
+                                <Image Source="pack://application:,,,/Images/Markers.png" />
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsAdjustingCasinoArea}"
+                                          ToolTip="Adjust Area">
+                                <Image Source="pack://application:,,,/Images/Area.png" />
+                            </ToggleButton>
+                            <Button PreviewMouseDown="MoveWindow_MouseDown"
+                                    Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                    ToolTip="Move window">
+                                <Image Source="pack://application:,,,/Images/Move.png" />
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                            <ToggleButton Content="1"
+                                          FontWeight="Bold"
+                                          IsChecked="{Binding ShowWinningsStatisticsLine}"
+                                          ToolTip="Show Winnings Line" />
+                            <ToggleButton Content="2"
+                                          FontWeight="Bold"
+                                          IsChecked="{Binding ShowNumberKindBalances}"
+                                          ToolTip="Show Number Kind Balances" />
+                            <ToggleButton Content="3"
+                                          FontWeight="Bold"
+                                          IsChecked="{Binding ShowNumberRepetitionLines}"
+                                          ToolTip="Show Number Repetition Lines" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!--  Right Side  -->
+            <Grid Grid.Column="1"
+                  Margin="2,0"
+                  Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="5" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <Grid.Resources>
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                               TargetType="{x:Type Button}">
+                            <Setter Property="Margin" Value="2,0" />
+                            <Setter Property="Focusable" Value="False" />
+                        </Style>
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                               TargetType="{x:Type ToggleButton}">
+                            <Setter Property="Margin" Value="2,0" />
+                            <Setter Property="Focusable" Value="False" />
+                        </Style>
+                        <Style TargetType="{x:Type Image}">
+                            <Setter Property="Width" Value="16" />
+                            <Setter Property="Height" Value="16" />
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Click="Start_Click"
+                                ToolTip="Run">
+                            <Image Source="pack://application:,,,/Images/Play.png" />
+                        </Button>
+                        <ToggleButton IsChecked="{Binding Session.IsPaused}"
+                                      IsEnabled="{Binding Session.IsRunning}"
+                                      ToolTip="Pause">
+                            <Image Source="pack://application:,,,/Images/Pause.png" />
+                        </ToggleButton>
+                        <Button Click="Stop_Click"
+                                IsEnabled="{Binding Session.IsRunning}"
+                                ToolTip="Stop">
+                            <Image Source="pack://application:,,,/Images/Stop.png" />
+                        </Button>
+                        <Button Click="ResetStatistics_Click"
+                                IsEnabled="{Binding Session.IsRunning,
+                                                    Converter={x:Static Converters:BoolToReversedBoolConverter.Instance}}"
+                                ToolTip="Reset Statistics">
+                            <Image Source="pack://application:,,,/Images/Reset.png" />
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal" />
+
+                    <StackPanel Grid.Column="4"
+                                Orientation="Horizontal">
+                        <Button Click="LoadSettings_Click">
+                            <Image Source="pack://application:,,,/Images/Load.png" />
+                        </Button>
+                        <Button Click="SaveSettings_Click">
+                            <Image Source="pack://application:,,,/Images/Save.png" />
+                        </Button>
+                        <ToggleButton IsChecked="{Binding ShowSettings}">
+                            <Image Source="pack://application:,,,/Images/Settings.png" />
+                        </ToggleButton>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="6"
+                                Orientation="Horizontal">
+
+                        <Button Click="Close_Click">
+                            <Image Source="pack://application:,,,/Images/Close.png" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+
+                <!--  Statistics Grid  -->
+                <Grid Grid.Row="2"
+                      Background="White"
+                      DataContext="{Binding Statistics}">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="70" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Number History  -->
+                    <ListBox Grid.Row="2"
+                             Grid.RowSpan="3"
+                             Background="#424141"
+                             ItemsSource="{Binding NumberHistory}"
+                             ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock FontSize="15"
+                                           Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="{x:Type ListBoxItem}">
+                                <Setter Property="Margin" Value="10,2" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=.,
+                                                                   Converter={x:Static Converters:IsNumberOfTypeConverter.Instance},
+                                                                   ConverterParameter=Red}"
+                                                 Value="True">
+                                        <Setter Property="Foreground" Value="Red" />
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Path=.,
+                                                                   Converter={x:Static Converters:IsNumberOfTypeConverter.Instance},
+                                                                   ConverterParameter=Black}"
+                                                 Value="True">
+                                        <Setter Property="Foreground" Value="Yellow" />
+                                        <Setter Property="HorizontalAlignment" Value="Left" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Path=.,
+                                                                   Converter={x:Static Converters:IsNumberOfTypeConverter.Instance},
+                                                                   ConverterParameter=Zero}"
+                                                 Value="True">
+                                        <Setter Property="Foreground" Value="Green" />
+                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+
+                    <!--  Streak Counts  -->
+                    <TabControl Grid.Row="2"
+                                Grid.Column="1">
+                        <TabControl.Resources>
+                            <Style BasedOn="{StaticResource {x:Type TextBox}}"
+                                   TargetType="{x:Type TextBox}">
+                                <Setter Property="IsReadOnly" Value="True" />
+                            </Style>
+                        </TabControl.Resources>
+                        <TabItem Header="Simple">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Text="Red:" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         Text="{Binding RedStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="RedStreakCount" />
+                                            <Binding Path="MaxRedStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxRedStreakCount}" />
+
+                                <TextBlock Grid.Row="1"
+                                           Text="Black:" />
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         Text="{Binding BlackStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="BlackStreakCount" />
+                                            <Binding Path="MaxBlackStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxBlackStreakCount}" />
+
+                                <TextBlock Grid.Row="2"
+                                           Text="Odd:" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         Text="{Binding OddStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="OddStreakCount" />
+                                            <Binding Path="MaxOddStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxOddStreakCount}" />
+
+                                <TextBlock Grid.Row="3"
+                                           Text="Even:" />
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="1"
+                                         Text="{Binding EvenStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="EvenStreakCount" />
+                                            <Binding Path="MaxEvenStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxEvenStreakCount}" />
+
+                                <TextBlock Grid.Row="4"
+                                           Text="To 18:" />
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="1"
+                                         Text="{Binding To18StreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="To18StreakCount" />
+                                            <Binding Path="MaxTo18StreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxTo18StreakCount}" />
+
+                                <TextBlock Grid.Row="5"
+                                           Text="From 19:" />
+                                <TextBox Grid.Row="5"
+                                         Grid.Column="1"
+                                         Text="{Binding From19StreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="From19StreakCount" />
+                                            <Binding Path="MaxFrom19StreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="5"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxFrom19StreakCount}" />
+
+                                <TextBlock Grid.Row="6"
+                                           Text="Red/Black:" />
+                                <TextBox Grid.Row="6"
+                                         Grid.Column="1"
+                                         Text="{Binding AlternatingRedBlackStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="AlternatingRedBlackStreakCount" />
+                                            <Binding Path="MaxAlternatingRedBlackStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="6"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxAlternatingRedBlackStreakCount}" />
+
+                                <TextBlock Grid.Row="7"
+                                           Text="Odd/Even:" />
+                                <TextBox Grid.Row="7"
+                                         Grid.Column="1"
+                                         Text="{Binding AlternatingOddEvenStreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="AlternatingOddEvenStreakCount" />
+                                            <Binding Path="MaxAlternatingOddEvenStreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="7"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxAlternatingOddEvenStreakCount}" />
+
+                                <TextBlock Grid.Row="8"
+                                           Text="18/18:" />
+                                <TextBox Grid.Row="8"
+                                         Grid.Column="1"
+                                         Text="{Binding Alternating1818StreakCount}">
+                                    <TextBox.Background>
+                                        <MultiBinding Converter="{x:Static Converters:GetStreakChangeColorConverter.Instance}">
+                                            <Binding Path="Alternating1818StreakCount" />
+                                            <Binding Path="MaxAlternating1818StreakCount" />
+                                        </MultiBinding>
+                                    </TextBox.Background>
+                                </TextBox>
+                                <TextBox Grid.Row="8"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxAlternating1818StreakCount}" />
+
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Thirds">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Text="1. Dozen:" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="1"
+                                         Text="{Binding Dozen1StreakCount}" />
+                                <TextBox Grid.Row="0"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxDozen1StreakCount}" />
+
+                                <TextBlock Grid.Row="1"
+                                           Text="2. Dozen:" />
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="1"
+                                         Text="{Binding Dozen2StreakCount}" />
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxDozen2StreakCount}" />
+
+                                <TextBlock Grid.Row="2"
+                                           Text="3. Dozen:" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         Text="{Binding Dozen3StreakCount}" />
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxDozen3StreakCount}" />
+
+                                <TextBlock Grid.Row="3"
+                                           Text="1. Third:" />
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="1"
+                                         Text="{Binding Third1StreakCount}" />
+                                <TextBox Grid.Row="3"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxThird1StreakCount}" />
+
+                                <TextBlock Grid.Row="4"
+                                           Text="2. Third:" />
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="1"
+                                         Text="{Binding Third2StreakCount}" />
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxThird2StreakCount}" />
+
+                                <TextBlock Grid.Row="5"
+                                           Text="3. Third:" />
+                                <TextBox Grid.Row="5"
+                                         Grid.Column="1"
+                                         Text="{Binding Third3StreakCount}" />
+                                <TextBox Grid.Row="5"
+                                         Grid.Column="2"
+                                         Text="{Binding MaxThird3StreakCount}" />
+
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                    <!--  Balance and Wins/Losses Stats  -->
+                    <GroupBox Grid.Row="0"
+                              Grid.ColumnSpan="2"
+                              Header="Statistics">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="Balance: " />
+                            <TextBox Grid.Column="1"
+                                     IsReadOnly="True"
+                                     Text="{Binding CurrentBalance,
+                                                    Mode=OneWay}" />
+
+                            <TextBlock Grid.Column="2"
+                                       Text="Max: " />
+                            <TextBox Grid.Column="3"
+                                     IsReadOnly="True"
+                                     Text="{Binding MaxBalance,
+                                                    Mode=OneWay}" />
+
+                            <TextBlock Grid.Column="4"
+                                       Text="Min: " />
+                            <TextBox Grid.Column="5"
+                                     IsReadOnly="True"
+                                     Text="{Binding MinBalance,
+                                                    Mode=OneWay}" />
+
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="Winnings: " />
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     IsReadOnly="True"
+                                     Text="{Binding TotalWinnings,
+                                                    Mode=OneWay}" />
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="2"
+                                       Text="Wins: " />
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="3"
+                                     IsReadOnly="True"
+                                     Text="{Binding WinCount,
+                                                    Mode=OneWay}" />
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="4"
+                                       Text="Losses: " />
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="5"
+                                     IsReadOnly="True"
+                                     Text="{Binding LossCount,
+                                                    Mode=OneWay}" />
+
+                        </Grid>
+                    </GroupBox>
+
+                    <!--  BetHistory  -->
+                    <Grid Grid.Row="4"
+                          Grid.Column="2"
+                          Margin="0">
+                        <TabControl>
+                            <TabItem Header="Bets">
+                                <ListView x:Name="lvBetHistory"
+                                          ItemsSource="{Binding BetHistory}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <!--
+                                                <GridViewColumn DisplayMemberBinding="{Binding StreakKind}"
+                                                Header="Streak" />
+                                            -->
+                                            <GridViewColumn DisplayMemberBinding="{Binding StreakCount}"
+                                                            Header="Count" />
+                                            <GridViewColumn Width="60"
+                                                            DisplayMemberBinding="{Binding BetKind}"
+                                                            Header="Bet" />
+                                            <GridViewColumn Width="35"
+                                                            DisplayMemberBinding="{Binding Amount}"
+                                                            Header="Amount" />
+                                            <GridViewColumn DisplayMemberBinding="{Binding Result}"
+                                                            Header="Result" />
+                                            <GridViewColumn DisplayMemberBinding="{Binding Time,
+                                                                                           StringFormat={}{0:mm\\:ss}}"
+                                                            Header="Time" />
+                                        </GridView>
+                                    </ListView.View>
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="{x:Type ListViewItem}">
+                                            <Setter Property="Background" Value="{Binding GroupId, Converter={x:Static Converters:BetGroupIdToBackgroundConverter.Instance}}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Result}"
+                                                             Value="None">
+                                                    <Setter Property="Background" Value="Red" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                </ListView>
+                            </TabItem>
+
+                            <TabItem Header="NumberBets">
+                                <ListView x:Name="lvNumberBetHistory"
+                                          ItemsSource="{Binding NumberBetHistory}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding Number}"
+                                                            Header="Num" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding Amount}"
+                                                            Header="Amount" />
+                                            <GridViewColumn DisplayMemberBinding="{Binding Result}"
+                                                            Header="Result" />
+                                            <GridViewColumn DisplayMemberBinding="{Binding Time,
+                                                                                           StringFormat={}{0:mm\\:ss}}"
+                                                            Header="Time" />
+                                        </GridView>
+                                    </ListView.View>
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="{x:Type ListViewItem}">
+                                            <Setter Property="Background" Value="{Binding GroupId, Converter={x:Static Converters:BetGroupIdToBackgroundConverter.Instance}}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Result}"
+                                                             Value="None">
+                                                    <Setter Property="Background" Value="Red" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                </ListView>
+                            </TabItem>
+
+                            <TabItem Header="Streaks">
+                                <ListView ItemsSource="{Binding StreakHistory}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Width="55"
+                                                            DisplayMemberBinding="{Binding StreakLength}"
+                                                            Header="Length" />
+                                            <GridViewColumn Width="55"
+                                                            DisplayMemberBinding="{Binding Count}"
+                                                            Header="Count" />
+                                            <GridViewColumn Width="80"
+                                                            DisplayMemberBinding="{Binding SurpassingStreaksCount}"
+                                                            Header="Surpassing" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding CountToSurpassingCountDifference}"
+                                                            Header="Diff" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding FollowingZeroCount}"
+                                                            Header="Zero" />
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+
+                            <TabItem Header="ThirdsStreaks">
+                                <ListView ItemsSource="{Binding ThirdsStreakHistory}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Width="55"
+                                                            DisplayMemberBinding="{Binding StreakLength}"
+                                                            Header="Length" />
+                                            <GridViewColumn Width="55"
+                                                            DisplayMemberBinding="{Binding Count}"
+                                                            Header="Count" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding SurpassingStreaksCount}"
+                                                            Header="Surpassing" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding CountToSurpassingCountDifference}"
+                                                            Header="Diff" />
+                                            <GridViewColumn Width="50"
+                                                            DisplayMemberBinding="{Binding FollowingZeroCount}"
+                                                            Header="Zero" />
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+
+                            <TabItem Header="NumberKind Balance"
+                                     IsSelected="{Binding Settings.ShowNumberKindBalances,
+                                                          Source={x:Static ViewModels:ApplicationViewModel.Instance}}">
+                                <ListView ItemsSource="{Binding NumberKindBalances}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="Kind">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Vertical">
+                                                            <TextBlock Text="{Binding KindA}" />
+                                                            <TextBlock Text="{Binding KindB}" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+
+                                            <GridViewColumn Width="50"
+                                                            Header="Adv">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Vertical">
+                                                            <TextBlock Text="{Binding CurrentAdvantageKindA}" />
+                                                            <TextBlock Text="{Binding CurrentAdvantageKindB}" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+
+                                            <GridViewColumn Width="60"
+                                                            Header="Max Adv">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Vertical">
+                                                            <TextBlock Text="{Binding MaxAdvantageKindA}" />
+                                                            <TextBlock Text="{Binding MaxAdvantageKindB}" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+
+                                            <GridViewColumn DisplayMemberBinding="{Binding Center}"
+                                                            Header="Center" />
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+
+                            </TabItem>
+
+                            <TabItem Header="Number Negligence">
+                                <ListView ItemsSource="{Binding NumberNegligenceStreaks}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Width="60"
+                                                            DisplayMemberBinding="{Binding Number}"
+                                                            Header="Number" />
+                                            <GridViewColumn Width="60"
+                                                            DisplayMemberBinding="{Binding NegligenceCount}"
+                                                            Header="Count" />
+                                            <GridViewColumn Width="70"
+                                                            DisplayMemberBinding="{Binding MaxNegligenceCount}"
+                                                            Header="Max Count" />
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </TabItem>
+                        </TabControl>
+                    </Grid>
+                </Grid>
+
+                <Views:RouletteSettings Grid.Row="2"
+                                        DataContext="{Binding Settings}"
+                                        Visibility="{Binding ShowSettings,
+                                                             Source={x:Static ViewModels:ApplicationViewModel.Instance},
+                                                             Converter={x:Static Converters:BoolToVisibilityConverter.Instance}}" />
+            </Grid>
+
+            <!--  Status  -->
+            <StatusBar Grid.Row="1"
+                       Grid.ColumnSpan="2"
+                       Background="White">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+
+                <!-- left side-->
+                <StatusBarItem Grid.Column="0">
+                    <TextBlock Text="{Binding Status.Message}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="2"
+                               Visibility="{Binding Settings.IsSimulationMode,
+                                                    Converter={x:Static Converters:BoolToVisibilityConverter.Instance}}">
+                    <TextBlock Text="Simulating" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="4">
+                    <TextBlock Text="{Binding Settings.BettingMode, StringFormat={}Mode: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="6">
+                    <TextBlock Text="{Binding Settings.IsBettingEnabled, StringFormat={}Betting: {0}}" />
+                </StatusBarItem>
+
+                <!-- right side -->
+                <StatusBarItem Grid.Column="8">
+                    <TextBlock Text="{Binding Statistics.ZeroCount, StringFormat={}Zero: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="10">
+                    <TextBlock Text="{Binding Session.SpinCount, StringFormat={}Spins: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="12">
+                    <TextBlock Text="{Binding Statistics.BetHistory.Count, StringFormat={}Bets: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="14">
+                    <TextBlock Text="{Binding Statistics.NumberBetHistory.Count, StringFormat={}NumberBets: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="16">
+                    <TextBlock Text="{Binding Session.ElapsedTimeAsString, StringFormat={}Elapsed Time: {0}}" />
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="18">
+                    <TextBlock Text="{Binding Session.RemainingRefreshTime, StringFormat={}Time To Refresh: {0}}" />
+                </StatusBarItem>
+            </StatusBar>
+
+        </Grid>
+    </Border>
+</Window>

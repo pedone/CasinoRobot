@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <LinearGradientBrush x:Key="AssigningMarkerBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0.3" Color="Transparent" />
+        <GradientStop Offset="1" Color="LightGray" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="UnAssignedMarkerBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0.3" Color="Transparent" />
+        <GradientStop Offset="1" Color="OrangeRed" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="SelectedNumberMarkerBrush"
+                         Opacity="0.7"
+                         Color="Red" />
+    <SolidColorBrush x:Key="SelectedBetMarkerBrush"
+                         Opacity="0.7"
+                         Color="LimeGreen" />
+    <SolidColorBrush x:Key="SelectedButtonMarkerBrush"
+                         Opacity="0.7"
+                         Color="DeepSkyBlue" />
+    <SolidColorBrush x:Key="DefaultMarkerBrush"
+                         Opacity="0.7"
+                         Color="Orange" />
+
+</ResourceDictionary>
